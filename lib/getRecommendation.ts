@@ -1,5 +1,5 @@
 import type { Card, Recommendation } from "@/app/types";
-import { getMerchantCategory } from "./merchantCategories";
+import { normalizeMerchant } from "./merchants";
 import { CARD_RULES, findCardRule } from "./cardRules";
 import type { CardRule } from "./cardRules";
 import { getPromoCodes } from "./promoCodes";
@@ -33,7 +33,7 @@ export function getRecommendation(
   merchant: string,
   subtotal: number
 ): Recommendation {
-  const category = getMerchantCategory(merchant);
+  const { merchantId, displayName, category } = normalizeMerchant(merchant);
 
   // --- Find best card from user's saved cards ---
   let bestCard: BestCard | null = null;
@@ -82,7 +82,7 @@ export function getRecommendation(
   }
 
   // --- Promo codes ---
-  const rawPromos = getPromoCodes(merchant);
+  const rawPromos = getPromoCodes(merchantId);
   const promoCodes = rawPromos
     .filter((p) => p.minSpend === 0 || subtotal >= p.minSpend)
     .map((p) => {
@@ -97,7 +97,7 @@ export function getRecommendation(
 
   // --- Merchant-specific card offers for user's cards ---
   const merchantOffers = cards.flatMap((card) =>
-    getMerchantOffers(card.issuer, merchant)
+    getMerchantOffers(card.issuer, merchantId)
       .filter((o) => o.minSpend === 0 || subtotal >= o.minSpend)
       .map((o) => ({
         description: o.description,
@@ -126,6 +126,8 @@ export function getRecommendation(
   }
 
   return {
+    detectedMerchant: displayName,
+    detectedCategory: category,
     bestOverall,
     estimatedSavings,
     bestCard: bestCard.label,

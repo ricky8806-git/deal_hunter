@@ -22,6 +22,8 @@ export interface MerchantOfferResult {
 }
 
 export interface Recommendation {
+  detectedMerchant: string;
+  detectedCategory: string;
   bestOverall: string;
   estimatedSavings: number;
   bestCard: string;

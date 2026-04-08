@@ -1,6 +1,6 @@
 export interface MerchantOffer {
   issuer: string;                               // lowercase keyword to match card issuer
-  merchantKeyword: string;                      // lowercase substring to match merchant input
+  merchantId: string;                           // canonical merchant id from merchants.ts
   description: string;
   offerType: "statement_credit" | "bonus_points";
   value: number;
@@ -13,7 +13,7 @@ export interface MerchantOffer {
 export const MERCHANT_OFFERS: MerchantOffer[] = [
   {
     issuer: "amex",
-    merchantKeyword: "nike",
+    merchantId: "nike",
     description: "Possible $20 back on $100+ at Nike",
     offerType: "statement_credit",
     value: 20,
@@ -23,7 +23,7 @@ export const MERCHANT_OFFERS: MerchantOffer[] = [
   },
   {
     issuer: "chase",
-    merchantKeyword: "starbucks",
+    merchantId: "starbucks",
     description: "Possible 10% back at Starbucks",
     offerType: "statement_credit",
     value: 10,
@@ -33,7 +33,7 @@ export const MERCHANT_OFFERS: MerchantOffer[] = [
   },
   {
     issuer: "chase",
-    merchantKeyword: "marriott",
+    merchantId: "marriott",
     description: "Possible $40 back on $200+ at Marriott",
     offerType: "statement_credit",
     value: 40,
@@ -43,7 +43,7 @@ export const MERCHANT_OFFERS: MerchantOffer[] = [
   },
   {
     issuer: "amex",
-    merchantKeyword: "amazon",
+    merchantId: "amazon",
     description: "Possible $15 back on $75+ at Amazon",
     offerType: "statement_credit",
     value: 15,
@@ -53,12 +53,10 @@ export const MERCHANT_OFFERS: MerchantOffer[] = [
   },
 ];
 
-export function getMerchantOffers(issuer: string, merchant: string): MerchantOffer[] {
+export function getMerchantOffers(issuer: string, merchantId: string | null): MerchantOffer[] {
+  if (!merchantId) return [];
   const li = issuer.toLowerCase();
-  const lm = merchant.toLowerCase();
   return MERCHANT_OFFERS.filter(
-    (o) =>
-      (li.includes(o.issuer) || o.issuer.includes(li)) &&
-      lm.includes(o.merchantKeyword)
+    (o) => o.merchantId === merchantId && (li.includes(o.issuer) || o.issuer.includes(li))
   );
 }

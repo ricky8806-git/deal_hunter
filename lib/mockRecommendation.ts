@@ -6,6 +6,8 @@ export function getMockRecommendation(
   _subtotal: number
 ): Recommendation {
   return {
+    detectedMerchant: _merchant,
+    detectedCategory: "general",
     bestOverall: "Try SAVE10 + use Chase Sapphire Preferred",
     estimatedSavings: 0,
     bestCard: "Venture X",

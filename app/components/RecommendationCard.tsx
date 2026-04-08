@@ -16,6 +16,13 @@ export default function RecommendationCard({ recommendation }: Props) {
     <section className={styles.card}>
       <h2 className={styles.heading}>Recommendation</h2>
 
+      {/* Detected merchant + category */}
+      <div className={styles.row}>
+        <span className={styles.rowLabel}>Merchant detected</span>
+        <span className={styles.rowValue}>{recommendation.detectedMerchant}</span>
+        <span className={styles.meta}>Category: {recommendation.detectedCategory}</span>
+      </div>
+
       {/* Best overall */}
       <div className={styles.row}>
         <span className={styles.rowLabel}>Best overall</span>
