@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir C:\\\\Users\\\\ricky\\\\OneDrive\\\\Documents\\\\My_Deal_Hunter:*)",
+      "Bash(cmd /c \"mkdir C:\\\\Users\\\\ricky\\\\OneDrive\\\\Documents\\\\My_Deal_Hunter\\\\docs\\\\superpowers\\\\specs\")",
+      "Bash(npx create-next-app@latest . --typescript --app --no-tailwind --no-eslint --no-src-dir --import-alias \"@/*\" --skip-install)",
+      "Bash(npx create-next-app@latest . --typescript --app --no-tailwind --no-eslint --no-src-dir --import-alias \"@/*\" --skip-install --force)",
+      "Bash(npx create-next-app@latest my-deal-hunter --typescript --app --no-tailwind --no-eslint --no-src-dir --import-alias \"@/*\" --skip-install)",
+      "Bash(mv my-deal-hunter/* .)",
+      "Bash(mv my-deal-hunter/.* .)",
+      "Bash(rm -rf my-deal-hunter)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
