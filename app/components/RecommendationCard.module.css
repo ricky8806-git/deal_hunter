@@ -4,44 +4,139 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .heading {
   font-size: 1.125rem;
   font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.result {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin: 0;
 }
 
 .row {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: 0.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.row:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .rowLabel {
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
 .rowValue {
   font-size: 0.9375rem;
+  font-weight: 500;
   color: var(--color-text);
 }
 
+.savings {
+  font-size: 0.875rem;
+  color: #15803d;
+  font-weight: 500;
+}
+
+.meta {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.subNote {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Promo codes */
+.promoItem {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.promoCode {
+  background: #f0f4ff;
+  color: var(--color-accent);
+  border: 1px solid #c7d2fe;
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.promoMeta {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.confidence_high   { color: #15803d; font-weight: 500; }
+.confidence_medium { color: #b45309; font-weight: 500; }
+.confidence_low    { color: var(--color-text-muted); }
+
+/* Merchant offers */
+.offerItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.5rem 0.75rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius);
+}
+
+.offerDescription {
+  font-size: 0.875rem;
+  color: #92400e;
+  font-weight: 500;
+}
+
+.offerDisclaimer {
+  font-size: 0.75rem;
+  color: #b45309;
+  font-style: italic;
+}
+
+/* Explanations */
+.explanationList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.explanationList li {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  padding-left: 0.75rem;
+  position: relative;
+}
+
+.explanationList li::before {
+  content: "·";
+  position: absolute;
+  left: 0;
+}
+
+/* Footer note */
 .note {
   font-size: 0.8125rem;
   color: var(--color-text-muted);
-  border-top: 1px solid var(--color-border);
-  padding-top: 0.75rem;
   font-style: italic;
+  margin: 0;
 }

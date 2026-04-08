@@ -9,9 +9,27 @@ export interface Purchase {
   subtotal: string;  // kept as string in form state; parsed to number on submit
 }
 
+export interface PromoResult {
+  code: string;
+  explanation: string;
+  savings: number;
+  confidence: "high" | "medium" | "low";
+}
+
+export interface MerchantOfferResult {
+  description: string;
+  disclaimer: string;
+}
+
 export interface Recommendation {
   bestOverall: string;
+  estimatedSavings: number;
   bestCard: string;
-  promoCodes: string[];
+  rewardRate: string;
+  rewardSavings: number;
+  conversionNote: string | null;
+  promoCodes: PromoResult[];
+  merchantOffers: MerchantOfferResult[];
+  explanations: string[];
   note: string;
 }

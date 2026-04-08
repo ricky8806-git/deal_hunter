@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Card, Purchase, Recommendation } from "@/app/types";
-import { getMockRecommendation } from "@/lib/mockRecommendation";
+import { getRecommendation } from "@/lib/getRecommendation";
 import Header from "@/app/components/Header";
 import CardManager from "@/app/components/CardManager";
 import PurchaseChecker from "@/app/components/PurchaseChecker";
@@ -50,8 +50,7 @@ export default function Home() {
 
     setCheckError("");
 
-    // TODO: Pass `cards` array into recommendation engine when real logic is added
-    setRecommendation(getMockRecommendation(merchant.trim(), parsed));
+    setRecommendation(getRecommendation(cards, merchant.trim(), parsed));
   }
 
   return (
