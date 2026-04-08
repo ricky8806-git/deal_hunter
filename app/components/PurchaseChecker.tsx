@@ -1,3 +1,5 @@
+"use client";
+
 import type { Purchase } from "@/app/types";
 import styles from "./PurchaseChecker.module.css";
 
