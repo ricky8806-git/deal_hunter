@@ -14,6 +14,7 @@ export function getMockRecommendation(
     rewardRate: "2% general",
     rewardSavings: 0,
     conversionNote: "Points valued at 1¢ each (conservative estimate)",
+    liveDeals: [],
     promoCodes: [
       { code: "SAVE10", explanation: "10% off", savings: 0, confidence: "high" },
       { code: "FREESHIP", explanation: "Free shipping", savings: 0, confidence: "medium" },

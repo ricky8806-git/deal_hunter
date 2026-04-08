@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Card, Purchase, Recommendation } from "@/app/types";
 import { getRecommendation } from "@/lib/getRecommendation";
+import { fetchLiveDeals } from "@/lib/searchDealsForMerchant";
 import Header from "@/app/components/Header";
 import CardManager from "@/app/components/CardManager";
 import PurchaseChecker from "@/app/components/PurchaseChecker";
@@ -19,6 +20,7 @@ export default function Home() {
     null
   );
   const [checkError, setCheckError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   function handleAddCard(card: Omit<Card, "id">) {
     setCards((prev) => [...prev, { ...card, id: crypto.randomUUID() }]);
@@ -30,11 +32,10 @@ export default function Home() {
 
   function handlePurchaseChange(field: keyof Purchase, value: string) {
     setPurchase((prev) => ({ ...prev, [field]: value }));
-    // Clear stale recommendation when inputs change
     setRecommendation(null);
   }
 
-  function handleCheckDeal() {
+  async function handleCheckDeal() {
     const { merchant, subtotal } = purchase;
 
     if (!merchant.trim()) {
@@ -49,8 +50,15 @@ export default function Home() {
     }
 
     setCheckError("");
+    setIsLoading(true);
+    setRecommendation(null);
 
-    setRecommendation(getRecommendation(cards, merchant.trim(), parsed));
+    try {
+      const liveDeals = await fetchLiveDeals(merchant.trim(), parsed);
+      setRecommendation(getRecommendation(cards, merchant.trim(), parsed, liveDeals));
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -66,8 +74,9 @@ export default function Home() {
         onChange={handlePurchaseChange}
         onCheck={handleCheckDeal}
         error={checkError}
+        isLoading={isLoading}
       />
-      <RecommendationCard recommendation={recommendation} />
+      <RecommendationCard recommendation={recommendation} isLoading={isLoading} />
     </main>
   );
 }

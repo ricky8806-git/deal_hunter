@@ -3,14 +3,27 @@ import styles from "./RecommendationCard.module.css";
 
 interface Props {
   recommendation: Recommendation | null;
+  isLoading?: boolean;
 }
 
 function fmt(n: number): string {
   return `$${n.toFixed(2)}`;
 }
 
-export default function RecommendationCard({ recommendation }: Props) {
+export default function RecommendationCard({ recommendation, isLoading = false }: Props) {
+  if (isLoading) {
+    return (
+      <section className={styles.card}>
+        <p className={styles.loadingMsg}>Searching for live deals…</p>
+      </section>
+    );
+  }
+
   if (!recommendation) return null;
+
+  const { liveDeals, promoCodes } = recommendation;
+  const hasLiveDeals = liveDeals.length > 0;
+  const hasLocalPromos = promoCodes.length > 0;
 
   return (
     <section className={styles.card}>
@@ -42,11 +55,51 @@ export default function RecommendationCard({ recommendation }: Props) {
         )}
       </div>
 
-      {/* Promo codes */}
-      {recommendation.promoCodes.length > 0 && (
+      {/* Live deals (preferred) */}
+      {hasLiveDeals && (
+        <div className={styles.row}>
+          <span className={styles.rowLabel}>Live deals found</span>
+          {liveDeals.map((d, i) => (
+            <div key={i} className={styles.liveDealItem}>
+              <div className={styles.liveDealHeader}>
+                <span className={styles.dealTypeBadge}>{d.dealType}</span>
+                {d.code && <code className={styles.promoCode}>{d.code}</code>}
+                <span className={styles[`confidence_${d.confidence}`]}>{d.confidence} confidence</span>
+              </div>
+              <span className={styles.liveDealTitle}>{d.title}</span>
+              {d.description && (
+                <span className={styles.liveDealDesc}>{d.description}</span>
+              )}
+              <div className={styles.liveDealMeta}>
+                {d.estimatedSavings > 0 && (
+                  <span className={styles.savings}>~{fmt(d.estimatedSavings)} off</span>
+                )}
+                {d.estimatedSavings > 0 && d.sourceName && <span className={styles.metaSep}>·</span>}
+                {d.sourceName && (
+                  <a
+                    className={styles.sourceLink}
+                    href={d.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {d.sourceName}
+                  </a>
+                )}
+                {d.expiryText && <span className={styles.expiry}> · {d.expiryText}</span>}
+              </div>
+              {d.stackabilityNote && (
+                <span className={styles.stackNote}>{d.stackabilityNote}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Local promo codes fallback */}
+      {!hasLiveDeals && hasLocalPromos && (
         <div className={styles.row}>
           <span className={styles.rowLabel}>Promo codes to try</span>
-          {recommendation.promoCodes.map((p) => (
+          {promoCodes.map((p) => (
             <div key={p.code} className={styles.promoItem}>
               <code className={styles.promoCode}>{p.code}</code>
               <span className={styles.promoMeta}>

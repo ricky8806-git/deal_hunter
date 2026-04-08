@@ -133,6 +133,87 @@
   left: 0;
 }
 
+/* Loading state */
+.loadingMsg {
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Live deals */
+.liveDealItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.75rem;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius);
+}
+
+.liveDealHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dealTypeBadge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #0369a1;
+  color: #fff;
+  border-radius: 3px;
+  padding: 0.1rem 0.35rem;
+}
+
+.liveDealTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.liveDealDesc {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.liveDealMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  margin-top: 0.1rem;
+}
+
+.metaSep {
+  color: var(--color-text-muted);
+}
+
+.sourceLink {
+  font-size: 0.8125rem;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.sourceLink:hover {
+  text-decoration: underline;
+}
+
+.expiry {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.stackNote {
+  font-size: 0.75rem;
+  color: #b45309;
+  font-style: italic;
+}
+
 /* Footer note */
 .note {
   font-size: 0.8125rem;

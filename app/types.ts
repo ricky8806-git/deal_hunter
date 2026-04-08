@@ -1,3 +1,7 @@
+import type { LiveDeal } from "@/lib/dealProviders";
+
+export type { LiveDeal };
+
 export interface Card {
   id: string;        // generated with crypto.randomUUID()
   issuer: string;
@@ -30,7 +34,8 @@ export interface Recommendation {
   rewardRate: string;
   rewardSavings: number;
   conversionNote: string | null;
-  promoCodes: PromoResult[];
+  promoCodes: PromoResult[];    // local fallback; empty when liveDeals is populated
+  liveDeals: LiveDeal[];        // live search results; empty without BRAVE_API_KEY
   merchantOffers: MerchantOfferResult[];
   explanations: string[];
   note: string;
