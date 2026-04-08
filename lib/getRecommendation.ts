@@ -1,10 +1,10 @@
-import type { Card, Recommendation } from "@/app/types";
-import type { LiveDeal } from "./dealProviders";
+import type { Card, Recommendation, SavingsPath } from "@/app/types";
 import { normalizeMerchant } from "./merchants";
 import { CARD_RULES, findCardRule } from "./cardRules";
 import type { CardRule } from "./cardRules";
 import { getPromoCodes } from "./promoCodes";
 import { getMerchantOffers } from "./merchantOffers";
+import type { MerchantOffer } from "./merchantOffers";
 
 function fmt(n: number): string {
   return `$${n.toFixed(2)}`;
@@ -27,21 +27,25 @@ function cardRateLabel(rule: CardRule, category: string): string {
   return `${(earnRate * 100).toFixed(0)}% on ${category}`;
 }
 
+function offerSavings(o: MerchantOffer, subtotal: number): number {
+  if (o.discountType === "fixed") return o.value;
+  if (o.discountType === "percent") return subtotal * (o.value / 100);
+  return 0;
+}
+
 export function getRecommendation(
   cards: Card[],
   merchant: string,
-  subtotal: number,
-  liveDeals: LiveDeal[] = []
+  subtotal: number
 ): Recommendation {
   const { merchantId, displayName, category } = normalizeMerchant(merchant);
 
-  // --- Find best card from user's saved cards ---
+  // --- Best card ---
   let bestCard: BestCard | null = null;
 
   for (const card of cards) {
     const rule = findCardRule(card.issuer, card.name);
     if (!rule) continue;
-
     const savings = cardSavings(rule, category, subtotal);
     if (!bestCard || savings > bestCard.savings) {
       bestCard = {
@@ -56,7 +60,7 @@ export function getRecommendation(
     }
   }
 
-  // --- Fallback: suggest best known card for category ---
+  // Fallback: suggest best known card for category
   if (!bestCard) {
     const fallback = CARD_RULES.reduce<{ rule: CardRule; savings: number } | null>(
       (best, rule) => {
@@ -79,80 +83,115 @@ export function getRecommendation(
     bestCard = { label: "No card data available", savings: 0, rate: "N/A", conversionNote: null };
   }
 
-  // --- Deal sources: live (preferred) or local fallback ---
-  const hasLiveDeals = liveDeals.length > 0;
+  // --- Local promo codes ---
+  const promoCodes = getPromoCodes(merchantId)
+    .filter((p) => p.minSpend === 0 || subtotal >= p.minSpend)
+    .map((p) => {
+      let savings = 0;
+      if (p.discountType === "percent") savings = subtotal * (p.value / 100);
+      else if (p.discountType === "fixed") savings = p.value;
+      return { code: p.code, explanation: p.explanation, savings, confidence: p.confidence };
+    });
 
-  // Local promo codes (only used when no live deals)
-  const promoCodes = hasLiveDeals
-    ? []
-    : getPromoCodes(merchantId)
-        .filter((p) => p.minSpend === 0 || subtotal >= p.minSpend)
-        .map((p) => {
-          let savings = 0;
-          if (p.discountType === "percent") savings = subtotal * (p.value / 100);
-          else if (p.discountType === "fixed") savings = p.value;
-          return { code: p.code, explanation: p.explanation, savings, confidence: p.confidence };
-        });
+  const topPromo = promoCodes[0] ?? null;
 
-  // Top deal savings (from live deals or local promos)
-  const topDealSavings = hasLiveDeals
-    ? (liveDeals[0].estimatedSavings ?? 0)
-    : promoCodes.reduce((sum, p) => sum + p.savings, 0);
-
-  // --- Merchant-specific card offers ---
-  const merchantOffers = cards.flatMap((card) =>
-    getMerchantOffers(card.issuer, merchantId)
-      .filter((o) => o.minSpend === 0 || subtotal >= o.minSpend)
-      .map((o) => ({
-        description: o.description,
-        disclaimer: "Not confirmed for your account — check your card app to activate",
-      }))
+  // --- Merchant offers ---
+  const rawOffers = cards.flatMap((card) =>
+    getMerchantOffers(card.issuer, merchantId).filter(
+      (o) => o.minSpend === 0 || subtotal >= o.minSpend
+    )
   );
 
-  // --- Build bestOverall ---
-  const topDealLabel = hasLiveDeals
-    ? (liveDeals[0].code ?? liveDeals[0].title)
-    : promoCodes.length > 0
-    ? promoCodes[0].code
-    : null;
+  const merchantOffers = rawOffers.map((o) => ({
+    description: o.description,
+    disclaimer: "Not confirmed for your account — check your card app to activate",
+    estimatedSavings: offerSavings(o, subtotal),
+  }));
 
-  const bestOverall = topDealLabel
-    ? `${topDealLabel} + ${bestCard.label}`
+  const possibleExtraSavings = rawOffers.reduce(
+    (sum, o) => sum + offerSavings(o, subtotal),
+    0
+  );
+
+  // --- Build savings paths ---
+  const topSavingsPaths: SavingsPath[] = [];
+
+  // Path 1: Card only (guaranteed)
+  topSavingsPaths.push({
+    label: bestCard.label,
+    confidence: "high",
+    guaranteedSavings: bestCard.savings,
+    likelySavings: 0,
+    possibleSavings: possibleExtraSavings,
+    stackabilityNote:
+      merchantOffers.length > 0
+        ? "Merchant offer requires activation — not confirmed for your account"
+        : null,
+    explanations: [
+      `${bestCard.rate} on ${fmt(subtotal)} → ~${fmt(bestCard.savings)} back`,
+      ...(bestCard.conversionNote ? [bestCard.conversionNote] : []),
+    ],
+  });
+
+  // Path 2: Top promo + card (if a promo exists)
+  if (topPromo) {
+    topSavingsPaths.push({
+      label: `${topPromo.code} + ${bestCard.label}`,
+      confidence: topPromo.confidence,
+      guaranteedSavings: bestCard.savings,
+      likelySavings: topPromo.savings,
+      possibleSavings: possibleExtraSavings,
+      stackabilityNote: "Promo and card rewards typically stack — verify before checkout",
+      explanations: [
+        `${topPromo.code}: ${topPromo.explanation}${topPromo.savings > 0 ? ` → ~${fmt(topPromo.savings)} off` : ""}`,
+        `${bestCard.rate} → ~${fmt(bestCard.savings)} back`,
+      ],
+    });
+  }
+
+  // --- Tiered summary ---
+  const bestGuaranteedSavings = bestCard.savings;
+  const bestGuaranteedLabel = bestCard.label;
+
+  const bestLikelySavings = topPromo
+    ? bestCard.savings + topPromo.savings
+    : bestCard.savings;
+  const bestLikelyLabel = topPromo
+    ? `${topPromo.code} + ${bestCard.label}`
     : bestCard.label;
 
-  const estimatedSavings = bestCard.savings + topDealSavings;
-
-  // --- Explanations ---
+  // --- Top-level explanations ---
   const explanations: string[] = [
     `Merchant category detected: ${category}`,
-    `Best card earns ${bestCard.rate} → ~${fmt(bestCard.savings)} back on ${fmt(subtotal)}`,
+    `Best card earns ${bestCard.rate} → ~${fmt(bestCard.savings)} guaranteed back on ${fmt(subtotal)}`,
   ];
-  if (hasLiveDeals) {
+  if (topPromo) {
     explanations.push(
-      `${liveDeals.length} live deal(s) found — top deal ~${fmt(topDealSavings)} savings`
-    );
-  } else if (promoCodes.length > 0) {
-    explanations.push(
-      `${promoCodes.length} local promo code(s) — adds ~${fmt(topDealSavings)} in savings`
+      `${topPromo.code} may add ~${fmt(topPromo.savings)} → ~${fmt(bestLikelySavings)} likely total`
     );
   }
   if (merchantOffers.length > 0) {
-    explanations.push(`${merchantOffers.length} possible merchant offer(s) to check`);
+    explanations.push(
+      `${merchantOffers.length} merchant offer(s) could add ~${fmt(possibleExtraSavings)} — requires activation`
+    );
   }
 
   return {
     detectedMerchant: displayName,
     detectedCategory: category,
-    bestOverall,
-    estimatedSavings,
+    bestGuaranteedSavings,
+    bestGuaranteedLabel,
+    bestLikelySavings,
+    bestLikelyLabel,
+    possibleExtraSavings,
+    topSavingsPaths,
     bestCard: bestCard.label,
     rewardRate: bestCard.rate,
     rewardSavings: bestCard.savings,
     conversionNote: bestCard.conversionNote,
     promoCodes,
-    liveDeals,
     merchantOffers,
     explanations,
-    note: "Card reward estimates use conservative point valuations. Live deals parsed from search — verify before checkout.",
+    note: "Card rewards are estimates using conservative point valuations. Promo codes and merchant offers are not verified for your account.",
   };
 }

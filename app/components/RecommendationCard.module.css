@@ -34,18 +34,13 @@
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-bottom: 0.125rem;
 }
 
 .rowValue {
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--color-text);
-}
-
-.savings {
-  font-size: 0.875rem;
-  color: #15803d;
-  font-weight: 500;
 }
 
 .meta {
@@ -57,6 +52,123 @@
   font-size: 0.8125rem;
   color: var(--color-text-muted);
   font-style: italic;
+}
+
+/* Tiered savings summary */
+.tierRow {
+  display: grid;
+  grid-template-columns: 7rem 6rem 1fr;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+}
+
+.tierLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.tierLabelAmber {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.tierLabelMuted {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.tierDesc {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Savings values */
+.savingsGreen {
+  font-size: 0.9375rem;
+  color: #15803d;
+  font-weight: 600;
+}
+
+.savingsAmber {
+  font-size: 0.9375rem;
+  color: #b45309;
+  font-weight: 600;
+}
+
+.savingsMuted {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* Confidence labels */
+.confidence_high   { color: #15803d; font-weight: 500; }
+.confidence_medium { color: #b45309; font-weight: 500; }
+.confidence_low    { color: var(--color-text-muted); }
+
+/* Savings paths */
+.pathCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--color-bg, #f9fafb);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  margin-top: 0.25rem;
+}
+
+.pathHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pathLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.pathSavings {
+  font-size: 0.875rem;
+  margin-top: 0.1rem;
+}
+
+.pathExplanations {
+  list-style: none;
+  padding: 0;
+  margin: 0.2rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.pathExplanations li {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  padding-left: 0.75rem;
+  position: relative;
+}
+
+.pathExplanations li::before {
+  content: "·";
+  position: absolute;
+  left: 0;
+}
+
+.stackNote {
+  font-size: 0.75rem;
+  color: #b45309;
+  font-style: italic;
+  margin-top: 0.15rem;
 }
 
 /* Promo codes */
@@ -82,10 +194,6 @@
   font-size: 0.875rem;
   color: var(--color-text-muted);
 }
-
-.confidence_high   { color: #15803d; font-weight: 500; }
-.confidence_medium { color: #b45309; font-weight: 500; }
-.confidence_low    { color: var(--color-text-muted); }
 
 /* Merchant offers */
 .offerItem {
@@ -131,87 +239,6 @@
   content: "·";
   position: absolute;
   left: 0;
-}
-
-/* Loading state */
-.loadingMsg {
-  font-size: 0.9375rem;
-  color: var(--color-text-muted);
-  font-style: italic;
-  margin: 0;
-}
-
-/* Live deals */
-.liveDealItem {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.6rem 0.75rem;
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
-  border-radius: var(--radius);
-}
-
-.liveDealHeader {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.dealTypeBadge {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: #0369a1;
-  color: #fff;
-  border-radius: 3px;
-  padding: 0.1rem 0.35rem;
-}
-
-.liveDealTitle {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.liveDealDesc {
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-}
-
-.liveDealMeta {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  flex-wrap: wrap;
-  margin-top: 0.1rem;
-}
-
-.metaSep {
-  color: var(--color-text-muted);
-}
-
-.sourceLink {
-  font-size: 0.8125rem;
-  color: var(--color-accent);
-  text-decoration: none;
-}
-
-.sourceLink:hover {
-  text-decoration: underline;
-}
-
-.expiry {
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-}
-
-.stackNote {
-  font-size: 0.75rem;
-  color: #b45309;
-  font-style: italic;
 }
 
 /* Footer note */

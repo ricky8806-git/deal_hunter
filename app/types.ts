@@ -1,7 +1,3 @@
-import type { LiveDeal } from "@/lib/dealProviders";
-
-export type { LiveDeal };
-
 export interface Card {
   id: string;        // generated with crypto.randomUUID()
   issuer: string;
@@ -23,19 +19,37 @@ export interface PromoResult {
 export interface MerchantOfferResult {
   description: string;
   disclaimer: string;
+  estimatedSavings: number;
+}
+
+export interface SavingsPath {
+  label: string;
+  confidence: "high" | "medium" | "low";
+  guaranteedSavings: number;  // card rewards — certain
+  likelySavings: number;      // promo code — likely but unverified
+  possibleSavings: number;    // merchant offer — requires activation
+  stackabilityNote: string | null;
+  explanations: string[];
 }
 
 export interface Recommendation {
   detectedMerchant: string;
   detectedCategory: string;
-  bestOverall: string;
-  estimatedSavings: number;
+  // Tiered savings summary
+  bestGuaranteedSavings: number;
+  bestGuaranteedLabel: string;
+  bestLikelySavings: number;
+  bestLikelyLabel: string;
+  possibleExtraSavings: number;
+  // Ranked paths (top 2–3)
+  topSavingsPaths: SavingsPath[];
+  // Card detail
   bestCard: string;
   rewardRate: string;
   rewardSavings: number;
   conversionNote: string | null;
-  promoCodes: PromoResult[];    // local fallback; empty when liveDeals is populated
-  liveDeals: LiveDeal[];        // live search results; empty without BRAVE_API_KEY
+  // Local deals
+  promoCodes: PromoResult[];
   merchantOffers: MerchantOfferResult[];
   explanations: string[];
   note: string;

@@ -1,12 +1,13 @@
 export interface MerchantOffer {
-  issuer: string;                               // lowercase keyword to match card issuer
-  merchantId: string;                           // canonical merchant id from merchants.ts
+  issuer: string;                                    // lowercase keyword to match card issuer
+  merchantId: string;                                // canonical merchant id from merchants.ts
   description: string;
   offerType: "statement_credit" | "bonus_points";
+  discountType: "fixed" | "percent";                 // whether value is a dollar amount or percent
   value: number;
   minSpend: number;
   requiresActivation: boolean;
-  confirmedForUser: false;                      // always false — never guaranteed
+  confirmedForUser: false;                           // always false — never guaranteed
 }
 
 // TODO: Replace with real card offer APIs (e.g. Amex Offers, Chase Offers, BofA Deals)
@@ -16,6 +17,7 @@ export const MERCHANT_OFFERS: MerchantOffer[] = [
     merchantId: "nike",
     description: "Possible $20 back on $100+ at Nike",
     offerType: "statement_credit",
+    discountType: "fixed",
     value: 20,
     minSpend: 100,
     requiresActivation: true,
@@ -26,6 +28,7 @@ export const MERCHANT_OFFERS: MerchantOffer[] = [
     merchantId: "starbucks",
     description: "Possible 10% back at Starbucks",
     offerType: "statement_credit",
+    discountType: "percent",
     value: 10,
     minSpend: 0,
     requiresActivation: true,
@@ -36,6 +39,7 @@ export const MERCHANT_OFFERS: MerchantOffer[] = [
     merchantId: "marriott",
     description: "Possible $40 back on $200+ at Marriott",
     offerType: "statement_credit",
+    discountType: "fixed",
     value: 40,
     minSpend: 200,
     requiresActivation: true,
@@ -46,6 +50,7 @@ export const MERCHANT_OFFERS: MerchantOffer[] = [
     merchantId: "amazon",
     description: "Possible $15 back on $75+ at Amazon",
     offerType: "statement_credit",
+    discountType: "fixed",
     value: 15,
     minSpend: 75,
     requiresActivation: true,

@@ -1,102 +1,121 @@
-import type { Recommendation } from "@/app/types";
+import type { Recommendation, SavingsPath } from "@/app/types";
 import styles from "./RecommendationCard.module.css";
 
 interface Props {
   recommendation: Recommendation | null;
-  isLoading?: boolean;
 }
 
 function fmt(n: number): string {
   return `$${n.toFixed(2)}`;
 }
 
-export default function RecommendationCard({ recommendation, isLoading = false }: Props) {
-  if (isLoading) {
-    return (
-      <section className={styles.card}>
-        <p className={styles.loadingMsg}>Searching for live deals…</p>
-      </section>
-    );
-  }
+function PathCard({ path }: { path: SavingsPath }) {
+  const totalLikely = path.guaranteedSavings + path.likelySavings;
+  return (
+    <div className={styles.pathCard}>
+      <div className={styles.pathHeader}>
+        <span className={styles[`confidence_${path.confidence}`]}>
+          {path.confidence === "high" ? "guaranteed" : path.confidence === "medium" ? "likely" : "possible"}
+        </span>
+        <span className={styles.pathLabel}>{path.label}</span>
+      </div>
+      <div className={styles.pathSavings}>
+        <span className={styles.savingsGreen}>~{fmt(totalLikely)}</span>
+        {path.possibleSavings > 0 && (
+          <span className={styles.savingsMuted}>
+            {" "}+ up to {fmt(path.possibleSavings)} more if offer activates
+          </span>
+        )}
+      </div>
+      <ul className={styles.pathExplanations}>
+        {path.explanations.map((e, i) => <li key={i}>{e}</li>)}
+      </ul>
+      {path.stackabilityNote && (
+        <span className={styles.stackNote}>{path.stackabilityNote}</span>
+      )}
+    </div>
+  );
+}
 
+export default function RecommendationCard({ recommendation }: Props) {
   if (!recommendation) return null;
 
-  const { liveDeals, promoCodes } = recommendation;
-  const hasLiveDeals = liveDeals.length > 0;
-  const hasLocalPromos = promoCodes.length > 0;
+  const {
+    detectedMerchant,
+    detectedCategory,
+    bestGuaranteedSavings,
+    bestGuaranteedLabel,
+    bestLikelySavings,
+    bestLikelyLabel,
+    possibleExtraSavings,
+    topSavingsPaths,
+    bestCard,
+    rewardRate,
+    rewardSavings,
+    conversionNote,
+    promoCodes,
+    merchantOffers,
+    explanations,
+    note,
+  } = recommendation;
+
+  const hasPromo = bestLikelySavings > bestGuaranteedSavings;
 
   return (
     <section className={styles.card}>
       <h2 className={styles.heading}>Recommendation</h2>
 
-      {/* Detected merchant + category */}
+      {/* Merchant detected */}
       <div className={styles.row}>
         <span className={styles.rowLabel}>Merchant detected</span>
-        <span className={styles.rowValue}>{recommendation.detectedMerchant}</span>
-        <span className={styles.meta}>Category: {recommendation.detectedCategory}</span>
+        <span className={styles.rowValue}>{detectedMerchant}</span>
+        <span className={styles.meta}>Category: {detectedCategory}</span>
       </div>
 
-      {/* Best overall */}
+      {/* Tiered savings summary */}
       <div className={styles.row}>
-        <span className={styles.rowLabel}>Best overall</span>
-        <span className={styles.rowValue}>{recommendation.bestOverall}</span>
-        <span className={styles.savings}>~{fmt(recommendation.estimatedSavings)} estimated savings</span>
-      </div>
-
-      {/* Best guaranteed card */}
-      <div className={styles.row}>
-        <span className={styles.rowLabel}>Best guaranteed card</span>
-        <span className={styles.rowValue}>{recommendation.bestCard}</span>
-        <span className={styles.meta}>
-          {recommendation.rewardRate} · ~{fmt(recommendation.rewardSavings)} back
-        </span>
-        {recommendation.conversionNote && (
-          <span className={styles.subNote}>{recommendation.conversionNote}</span>
+        <span className={styles.rowLabel}>Savings summary</span>
+        <div className={styles.tierRow}>
+          <span className={styles.tierLabel}>Guaranteed</span>
+          <span className={styles.savingsGreen}>~{fmt(bestGuaranteedSavings)}</span>
+          <span className={styles.tierDesc}>{bestGuaranteedLabel}</span>
+        </div>
+        {hasPromo && (
+          <div className={styles.tierRow}>
+            <span className={styles.tierLabelAmber}>Likely</span>
+            <span className={styles.savingsAmber}>~{fmt(bestLikelySavings)}</span>
+            <span className={styles.tierDesc}>{bestLikelyLabel}</span>
+          </div>
+        )}
+        {possibleExtraSavings > 0 && (
+          <div className={styles.tierRow}>
+            <span className={styles.tierLabelMuted}>Possible extra</span>
+            <span className={styles.savingsMuted}>up to {fmt(possibleExtraSavings)}</span>
+            <span className={styles.tierDesc}>merchant offer — requires activation</span>
+          </div>
         )}
       </div>
 
-      {/* Live deals (preferred) */}
-      {hasLiveDeals && (
+      {/* Savings paths */}
+      {topSavingsPaths.length > 0 && (
         <div className={styles.row}>
-          <span className={styles.rowLabel}>Live deals found</span>
-          {liveDeals.map((d, i) => (
-            <div key={i} className={styles.liveDealItem}>
-              <div className={styles.liveDealHeader}>
-                <span className={styles.dealTypeBadge}>{d.dealType}</span>
-                {d.code && <code className={styles.promoCode}>{d.code}</code>}
-                <span className={styles[`confidence_${d.confidence}`]}>{d.confidence} confidence</span>
-              </div>
-              <span className={styles.liveDealTitle}>{d.title}</span>
-              {d.description && (
-                <span className={styles.liveDealDesc}>{d.description}</span>
-              )}
-              <div className={styles.liveDealMeta}>
-                {d.estimatedSavings > 0 && (
-                  <span className={styles.savings}>~{fmt(d.estimatedSavings)} off</span>
-                )}
-                {d.estimatedSavings > 0 && d.sourceName && <span className={styles.metaSep}>·</span>}
-                {d.sourceName && (
-                  <a
-                    className={styles.sourceLink}
-                    href={d.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {d.sourceName}
-                  </a>
-                )}
-                {d.expiryText && <span className={styles.expiry}> · {d.expiryText}</span>}
-              </div>
-              {d.stackabilityNote && (
-                <span className={styles.stackNote}>{d.stackabilityNote}</span>
-              )}
-            </div>
-          ))}
+          <span className={styles.rowLabel}>Savings paths</span>
+          {topSavingsPaths.map((p, i) => <PathCard key={i} path={p} />)}
         </div>
       )}
 
-      {/* Local promo codes fallback */}
-      {!hasLiveDeals && hasLocalPromos && (
+      {/* Card detail */}
+      <div className={styles.row}>
+        <span className={styles.rowLabel}>Best guaranteed card</span>
+        <span className={styles.rowValue}>{bestCard}</span>
+        <span className={styles.meta}>
+          {rewardRate} · ~{fmt(rewardSavings)} back
+        </span>
+        {conversionNote && <span className={styles.subNote}>{conversionNote}</span>}
+      </div>
+
+      {/* Promo codes */}
+      {promoCodes.length > 0 && (
         <div className={styles.row}>
           <span className={styles.rowLabel}>Promo codes to try</span>
           {promoCodes.map((p) => (
@@ -114,10 +133,10 @@ export default function RecommendationCard({ recommendation, isLoading = false }
       )}
 
       {/* Merchant offers */}
-      {recommendation.merchantOffers.length > 0 && (
+      {merchantOffers.length > 0 && (
         <div className={styles.row}>
           <span className={styles.rowLabel}>Possible extra savings</span>
-          {recommendation.merchantOffers.map((o, i) => (
+          {merchantOffers.map((o, i) => (
             <div key={i} className={styles.offerItem}>
               <span className={styles.offerDescription}>{o.description}</span>
               <span className={styles.offerDisclaimer}>{o.disclaimer}</span>
@@ -130,13 +149,11 @@ export default function RecommendationCard({ recommendation, isLoading = false }
       <div className={styles.row}>
         <span className={styles.rowLabel}>Why</span>
         <ul className={styles.explanationList}>
-          {recommendation.explanations.map((e, i) => (
-            <li key={i}>{e}</li>
-          ))}
+          {explanations.map((e, i) => <li key={i}>{e}</li>)}
         </ul>
       </div>
 
-      <p className={styles.note}>{recommendation.note}</p>
+      <p className={styles.note}>{note}</p>
     </section>
   );
 }

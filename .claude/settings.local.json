@@ -10,7 +10,21 @@
       "Bash(mv my-deal-hunter/.* .)",
       "Bash(rm -rf my-deal-hunter)",
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(grep -v \"^commit\\\\|^Author\\\\|^Date\\\\|^$\")",
+      "Bash(find:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote:*)",
+      "Bash(git push:*)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(npx next:*)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(xargs grep:*)",
+      "WebFetch(domain:api.search.brave.com)",
+      "WebFetch(domain:brave.com)",
+      "WebFetch(domain:api-dashboard.search.brave.com)"
     ]
   }
 }
