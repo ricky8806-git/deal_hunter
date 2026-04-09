@@ -53,15 +53,17 @@ export default function Home() {
 
     // Fetch online fallback for any cards not in local rules
     const fallbackRules = new Map<string, import("@/lib/cardRules").CardRule>();
+    const failedLookups: string[] = [];
     for (const card of cards) {
       if (!findCardRule(card.issuer, card.name)) {
         const rule = await fetchFallbackCardRule(card.issuer, card.name);
         if (rule) fallbackRules.set(card.id, rule);
+        else failedLookups.push(`${card.issuer} ${card.name}`);
       }
     }
 
     setIsChecking(false);
-    setRecommendation(getRecommendation(cards, merchant.trim(), parsed, fallbackRules));
+    setRecommendation(getRecommendation(cards, merchant.trim(), parsed, fallbackRules, failedLookups));
   }
 
   return (

@@ -4,23 +4,29 @@ const GEMINI_URL =
 
 const PROMPT = (issuer: string, cardName: string) => `You are a credit card rewards researcher. Look up the standard permanent baseline rewards for the "${issuer} ${cardName}" credit card.
 
-Return ONLY a JSON object with exactly these fields:
-{
-  "matchedCardName": "official card name",
-  "issuer": "issuer name",
-  "rewardType": "cashback" or "points",
-  "baseEarnRate": <decimal fraction, e.g. 0.02 for 2%>,
-  "categoryEarnRates": { "dining": 0.03, "travel": 0.02 },
-  "pointToCashValue": <conservative dollars per point, e.g. 0.01>,
-  "note": "brief one-line source note"
-}
+Return ONLY a JSON object with exactly these fields, no markdown, no code fences, no explanation:
+{"matchedCardName":"official card name","issuer":"issuer name","rewardType":"cashback or points","baseEarnRate":0.01,"categoryEarnRates":{"dining":0.03},"pointToCashValue":0.01,"note":"brief note"}
 
 Rules:
-- Only standard permanent rewards — no signup bonuses, rotating categories, or temporary promotions
+- baseEarnRate: decimal fraction of spend earned as cash equivalent (e.g. 0.02 = 2%)
 - categoryEarnRates keys must be one of: dining, travel, groceries, gas, retail, entertainment, streaming, pharmacy, general
-- pointToCashValue: use 0.01 for most rewards programs unless cash back is clearly different
-- If the card is not found or data is unreliable, return null
-- Return ONLY the JSON, no markdown, no explanation`;
+- Only standard permanent rewards — no signup bonuses, rotating categories, temporary promotions
+- If the card is not found or data is unreliable, return the word: null`;
+
+/** Extract the outermost JSON object from a string that may contain extra text */
+function extractJson(text: string): string | null {
+  const start = text.indexOf("{");
+  if (start === -1) return null;
+  let depth = 0;
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === "{") depth++;
+    else if (text[i] === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
+}
 
 export async function POST(request: Request) {
   if (!GEMINI_API_KEY) {
@@ -45,7 +51,6 @@ export async function POST(request: Request) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ parts: [{ text: PROMPT(issuer.trim(), cardName.trim()) }] }],
-        tools: [{ google_search: {} }],
       }),
     });
   } catch {
@@ -53,22 +58,27 @@ export async function POST(request: Request) {
   }
 
   if (!geminiRes.ok) {
-    return Response.json({ error: `Gemini API error ${geminiRes.status}` }, { status: 502 });
+    const errBody = await geminiRes.text();
+    return Response.json(
+      { error: `Gemini API error ${geminiRes.status}`, detail: errBody },
+      { status: 502 }
+    );
   }
 
   const data = await geminiRes.json();
   const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
-  const match = text.match(/\{[\s\S]*?\}/);
-  if (!match) {
-    return Response.json({ error: "No structured data in Gemini response" }, { status: 502 });
+  if (text.trim() === "null") return Response.json(null);
+
+  const jsonStr = extractJson(text);
+  if (!jsonStr) {
+    return Response.json({ error: "No JSON in Gemini response", raw: text.slice(0, 300) }, { status: 502 });
   }
 
   try {
-    const parsed = JSON.parse(match[0]);
-    if (parsed === null) return Response.json(null);
+    const parsed = JSON.parse(jsonStr);
     return Response.json(parsed);
   } catch {
-    return Response.json({ error: "Failed to parse Gemini response" }, { status: 502 });
+    return Response.json({ error: "Failed to parse Gemini JSON", raw: jsonStr.slice(0, 300) }, { status: 502 });
   }
 }

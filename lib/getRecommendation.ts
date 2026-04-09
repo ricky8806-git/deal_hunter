@@ -37,7 +37,8 @@ export function getRecommendation(
   cards: Card[],
   merchant: string,
   subtotal: number,
-  fallbackRules: Map<string, CardRule> = new Map()
+  fallbackRules: Map<string, CardRule> = new Map(),
+  failedLookups: string[] = []
 ): Recommendation {
   const { merchantId, displayName, category } = normalizeMerchant(merchant);
 
@@ -178,6 +179,9 @@ export function getRecommendation(
     explanations.push(
       `${merchantOffers.length} merchant offer(s) could add ~${fmt(possibleExtraSavings)} — requires activation`
     );
+  }
+  for (const label of failedLookups) {
+    explanations.push(`${label}: online rewards lookup unavailable — card skipped`);
   }
 
   return {
