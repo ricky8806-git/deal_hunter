@@ -2,16 +2,19 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
-const PROMPT = (issuer: string, cardName: string) => `You are a credit card rewards researcher. Look up the standard permanent baseline rewards for the "${issuer} ${cardName}" credit card.
+const PROMPT = (issuer: string, cardName: string) => `You are a credit card rewards researcher. A user entered "${issuer} ${cardName}" as their credit card. This may be an informal, abbreviated, or misspelled name.
+
+Your job: identify the most likely real credit card this refers to, and return its standard permanent baseline rewards.
 
 Return ONLY a JSON object with exactly these fields, no markdown, no code fences, no explanation:
 {"matchedCardName":"official card name","issuer":"issuer name","rewardType":"cashback or points","baseEarnRate":0.01,"categoryEarnRates":{"dining":0.03},"pointToCashValue":0.01,"note":"brief note"}
 
 Rules:
+- Make your best guess even if the name is informal — e.g. "Chase Prime Signature" likely refers to the Amazon Prime Rewards Visa Signature by Chase
 - baseEarnRate: decimal fraction of spend earned as cash equivalent (e.g. 0.02 = 2%)
 - categoryEarnRates keys must be one of: dining, travel, groceries, gas, retail, entertainment, streaming, pharmacy, general
 - Only standard permanent rewards — no signup bonuses, rotating categories, temporary promotions
-- If the card is not found or data is unreliable, return the word: null`;
+- Only return null if you have absolutely no idea what card this could be`;
 
 /** Extract the outermost JSON object from a string that may contain extra text */
 function extractJson(text: string): string | null {
