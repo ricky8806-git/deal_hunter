@@ -8,6 +8,7 @@ interface Props {
   onChange: (field: keyof Purchase, value: string) => void;
   onCheck: () => void;
   error: string;
+  isChecking?: boolean;
 }
 
 export default function PurchaseChecker({
@@ -15,6 +16,7 @@ export default function PurchaseChecker({
   onChange,
   onCheck,
   error,
+  isChecking = false,
 }: Props) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,8 +56,8 @@ export default function PurchaseChecker({
           </div>
         </div>
         {error && <p className={styles.error}>{error}</p>}
-        <button type="submit" className={styles.button}>
-          Check Best Deal
+        <button type="submit" className={styles.button} disabled={isChecking}>
+          {isChecking ? "Looking up card…" : "Check Best Deal"}
         </button>
       </form>
     </section>

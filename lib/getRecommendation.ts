@@ -36,16 +36,20 @@ function offerSavings(o: MerchantOffer, subtotal: number): number {
 export function getRecommendation(
   cards: Card[],
   merchant: string,
-  subtotal: number
+  subtotal: number,
+  fallbackRules: Map<string, CardRule> = new Map()
 ): Recommendation {
   const { merchantId, displayName, category } = normalizeMerchant(merchant);
 
   // --- Best card ---
   let bestCard: BestCard | null = null;
 
+  let fallbackUsed = false;
+
   for (const card of cards) {
-    const rule = findCardRule(card.issuer, card.name);
+    const rule = findCardRule(card.issuer, card.name) ?? fallbackRules.get(card.id) ?? null;
     if (!rule) continue;
+    if (fallbackRules.has(card.id) && !findCardRule(card.issuer, card.name)) fallbackUsed = true;
     const savings = cardSavings(rule, category, subtotal);
     if (!bestCard || savings > bestCard.savings) {
       bestCard = {
@@ -192,6 +196,9 @@ export function getRecommendation(
     promoCodes,
     merchantOffers,
     explanations,
-    note: "Card rewards are estimates using conservative point valuations. Promo codes and merchant offers are not verified for your account.",
+    note: fallbackUsed
+      ? "One or more cards was estimated via online lookup (low confidence) — rewards may not reflect your specific card variant. " +
+        "Card rewards use conservative point valuations. Promo codes and merchant offers are not verified for your account."
+      : "Card rewards are estimates using conservative point valuations. Promo codes and merchant offers are not verified for your account.",
   };
 }

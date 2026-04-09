@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { Card, Purchase, Recommendation } from "@/app/types";
 import { getRecommendation } from "@/lib/getRecommendation";
+import { findCardRule } from "@/lib/cardRules";
+import { fetchFallbackCardRule } from "@/lib/cardFallback";
 import Header from "@/app/components/Header";
 import CardManager from "@/app/components/CardManager";
 import PurchaseChecker from "@/app/components/PurchaseChecker";
@@ -17,6 +19,7 @@ export default function Home() {
   });
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [checkError, setCheckError] = useState("");
+  const [isChecking, setIsChecking] = useState(false);
 
   function handleAddCard(card: Omit<Card, "id">) {
     setCards((prev) => [...prev, { ...card, id: crypto.randomUUID() }]);
@@ -31,7 +34,7 @@ export default function Home() {
     setRecommendation(null);
   }
 
-  function handleCheckDeal() {
+  async function handleCheckDeal() {
     const { merchant, subtotal } = purchase;
 
     if (!merchant.trim()) {
@@ -46,7 +49,19 @@ export default function Home() {
     }
 
     setCheckError("");
-    setRecommendation(getRecommendation(cards, merchant.trim(), parsed));
+    setIsChecking(true);
+
+    // Fetch online fallback for any cards not in local rules
+    const fallbackRules = new Map<string, import("@/lib/cardRules").CardRule>();
+    for (const card of cards) {
+      if (!findCardRule(card.issuer, card.name)) {
+        const rule = await fetchFallbackCardRule(card.issuer, card.name);
+        if (rule) fallbackRules.set(card.id, rule);
+      }
+    }
+
+    setIsChecking(false);
+    setRecommendation(getRecommendation(cards, merchant.trim(), parsed, fallbackRules));
   }
 
   return (
@@ -62,6 +77,7 @@ export default function Home() {
         onChange={handlePurchaseChange}
         onCheck={handleCheckDeal}
         error={checkError}
+        isChecking={isChecking}
       />
       <RecommendationCard recommendation={recommendation} />
     </main>

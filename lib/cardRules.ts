@@ -42,18 +42,30 @@ export const CARD_RULES: CardRule[] = [
 ];
 
 /**
- * Matches a user-entered card (issuer + name) against known card rules.
- * Matching is loose: issuer keyword must appear in user input AND
- * at least one significant name keyword (>3 chars) must match.
- * Returns null if the card is not in the known rules dataset.
+ * Matches a user-entered card against known card rules.
+ * Match order:
+ *   1. Exact: issuer keyword AND all name words present
+ *   2. Fuzzy: issuer keyword AND any significant name keyword (>3 chars) present
+ * Returns null if no local match — caller should attempt online fallback.
  */
 export function findCardRule(issuer: string, name: string): CardRule | null {
   const combined = `${issuer} ${name}`.toLowerCase();
+
+  // 1. Exact match
+  for (const rule of CARD_RULES) {
+    const issuerMatch = combined.includes(rule.issuer);
+    const nameWords = rule.name.split(" ");
+    const nameMatch = nameWords.every((w) => combined.includes(w));
+    if (issuerMatch && nameMatch) return rule;
+  }
+
+  // 2. Fuzzy match
   for (const rule of CARD_RULES) {
     const issuerMatch = combined.includes(rule.issuer);
     const nameKeywords = rule.name.split(" ").filter((w) => w.length > 3);
     const nameMatch = nameKeywords.some((w) => combined.includes(w));
     if (issuerMatch && nameMatch) return rule;
   }
+
   return null;
 }

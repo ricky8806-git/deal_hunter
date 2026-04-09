@@ -18,7 +18,13 @@ npm run dev -- --port 3001
 3. Leave all settings as defaults — Vercel detects Next.js automatically
 4. Click **Deploy**
 
-No environment variables required. No build config changes needed.
+**Environment variables (optional):**
+
+| Variable | Purpose |
+|---|---|
+| `GEMINI_API_KEY` | Enables online fallback lookup for unrecognized cards via Gemini + Google Search. Without it, unknown cards are silently skipped. |
+
+Add to `.env.local` for local dev, or set in Vercel project settings under **Settings → Environment Variables** for production.
 
 ## What's intentionally local / mocked
 
