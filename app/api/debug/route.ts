@@ -7,27 +7,15 @@ export async function GET() {
 
   const maskedKey = key.slice(0, 8) + "..." + key.slice(-4);
 
-  let geminiRes: Response;
+  // List available models for this key
   try {
-    geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: 'Return only this exact JSON: {"ok":true}' }] }],
-        }),
-      }
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`
     );
+    const data = await res.json();
+    const names = (data.models ?? []).map((m: { name: string }) => m.name);
+    return Response.json({ status: "MODEL_LIST", key: maskedKey, availableModels: names });
   } catch (e) {
     return Response.json({ status: "NETWORK_ERROR", key: maskedKey, error: String(e) });
   }
-
-  const raw = await geminiRes.text();
-
-  if (!geminiRes.ok) {
-    return Response.json({ status: "GEMINI_ERROR", key: maskedKey, httpStatus: geminiRes.status, response: raw });
-  }
-
-  return Response.json({ status: "OK", key: maskedKey, geminiResponse: raw.slice(0, 500) });
 }
