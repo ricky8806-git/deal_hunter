@@ -19,7 +19,7 @@ interface BestCard {
 
 function cardSavings(rule: CardRule, category: string, subtotal: number): number {
   const earnRate = (rule.categoryRates as Record<string, number>)[category] ?? rule.baseEarnRate;
-  return subtotal * earnRate * rule.pointToCashValue;
+  return subtotal * earnRate;
 }
 
 function cardRateLabel(rule: CardRule, category: string): string {
