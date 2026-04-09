@@ -1,14 +1,22 @@
 import type { CardRule } from "./cardRules";
 import type { Category } from "./merchantCategories";
+import { getCachedCardRule, storeCachedCard } from "./cardCache";
 
 /**
- * Calls the server-side /api/card-lookup route to estimate rewards for an unknown card.
- * Returns a CardRule-shaped object with "(online estimate)" in the label, or null on failure.
+ * Match order:
+ *   1. Cache hit  → return cached CardRule (increments timesUsed)
+ *   2. Cache miss → call /api/card-lookup, store result, return CardRule
+ * Returns null if the online lookup also fails.
  */
 export async function fetchFallbackCardRule(
   issuer: string,
   cardName: string
 ): Promise<CardRule | null> {
+  // 1. Cache hit
+  const cached = getCachedCardRule(issuer, cardName);
+  if (cached) return cached;
+
+  // 2. Online lookup
   try {
     const res = await fetch("/api/card-lookup", {
       method: "POST",
@@ -31,15 +39,19 @@ export async function fetchFallbackCardRule(
       }
     }
 
-    return {
+    const matchedCardName: string = data.matchedCardName ?? cardName;
+    const rule: CardRule = {
       issuer: (data.issuer ?? issuer).toLowerCase(),
-      name: (data.matchedCardName ?? cardName).toLowerCase(),
+      name: matchedCardName.toLowerCase(),
       rewardType: data.rewardType === "cashback" ? "cashback" : "points",
       baseEarnRate,
       categoryRates,
       pointToCashValue,
-      label: `${data.matchedCardName ?? cardName} (online estimate — low confidence)`,
+      label: `${matchedCardName} (online estimate — low confidence)`,
     };
+
+    storeCachedCard(issuer, cardName, matchedCardName, rule);
+    return rule;
   } catch {
     return null;
   }
